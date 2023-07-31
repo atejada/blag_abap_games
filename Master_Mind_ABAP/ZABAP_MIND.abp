@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*& Report  ZABAP_MIND                                                  *
+*&                                                                     *
+*& Developed by: Alvaro "Blag" Tejada Galindo.                         *
+*& Start day: 26.01.2010                                               *
+*& End day: XX.01.2010                                                 *
+*&---------------------------------------------------------------------*
+
+REPORT zabap_mind NO STANDARD PAGE HEADING.
+
+INCLUDE zcl_abapmind_ui.
+
+DATA: g_ui TYPE REF TO zcl_abapmind_ui.
+
+SELECTION-SCREEN BEGIN OF BLOCK name.
+PARAMETERS: p_name(10) TYPE c.
+SELECTION-SCREEN END OF BLOCK name.
+
+START-OF-SELECTION.
+
+  CREATE OBJECT g_ui
+    EXPORTING
+      name = p_name.
+
+  CALL SCREEN 0100.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0100  OUTPUT                                    *
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+
+  CALL METHOD g_ui->pbo( ).
+
+ENDMODULE.                 " STATUS_0100  OUTPUT
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT                               *
+*&---------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+
+  CALL METHOD g_ui->pai
+    EXPORTING
+      ok_code = ok_code.
+
+ENDMODULE.                 " USER_COMMAND_0100  INPUT

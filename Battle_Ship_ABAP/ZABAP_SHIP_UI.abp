@@ -1,0 +1,689 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZABAP_SHIP_UI                                    *
+*&---------------------------------------------------------------------*
+
+constants: text_001 type string value 'A',
+           text_002 type string value 'B',
+           text_003 type string value 'D',
+           text_004 type string value 'S',
+           text_005 type string value 'P',
+           text_006 type string value 'Play',
+           c_a type c value 5,
+           c_b type c value 4,
+           c_d type c value 3,
+           c_s type c value 3,
+           c_p type c value 2.
+
+data:
+     boat1(1) type c value text_001,
+     boat2(1) type c value text_002,
+     boat3(1) type c value text_003,
+     boat4(1) type c value text_004,
+     boat5(1) type c value text_005,
+     play(4) type c value text_006,
+     g_a(1) type c,
+     g_b(1) type c,
+     g_d(1) type c,
+     g_s(1) type c,
+     g_p(1) type c.
+
+data: g_horizontal type c,
+      g_vertical type c,
+      param_c type c,
+      g_player_layout type c,
+      g_can_play type c,
+      cl_random type ref to cl_random_number,
+      g_player_counter type i,
+      g_computer_counter type i.
+
+data: player1(1) type c,player2(1) type c,player3(1) type c,player4(1) type c,
+      player5(1) type c,player6(1) type c,player7(1) type c,player8(1) type c,
+      player9(1) type c,player10(1) type c,player11(1) type c,player12(1) type c,
+      player13(1) type c,player14(1) type c,player15(1) type c,player16(1) type c,
+      player17(1) type c,player18(1) type c,player19(1) type c,player20(1) type c,
+      player21(1) type c,player22(1) type c,player23(1) type c,player24(1) type c,
+      player25(1) type c,player26(1) type c,player27(1) type c,player28(1) type c,
+      player29(1) type c,player30(1) type c,player31(1) type c,player32(1) type c,
+      player33(1) type c,player34(1) type c,player35(1) type c,player36(1) type c,
+      player37(1) type c,player38(1) type c,player39(1) type c,player40(1) type c,
+      player41(1) type c,player42(1) type c,player43(1) type c,player44(1) type c,
+      player45(1) type c,player46(1) type c,player47(1) type c,player48(1) type c,
+      player49(1) type c.
+
+data: computer1(1) type c,computer2(1) type c,computer3(1) type c,computer4(1) type c,
+      computer5(1) type c,computer6(1) type c,computer7(1) type c,computer8(1) type c,
+      computer9(1) type c,computer10(1) type c,computer11(1) type c,computer12(1) type c,
+      computer13(1) type c,computer14(1) type c,computer15(1) type c,computer16(1) type c,
+      computer17(1) type c,computer18(1) type c,computer19(1) type c,computer20(1) type c,
+      computer21(1) type c,computer22(1) type c,computer23(1) type c,computer24(1) type c,
+      computer25(1) type c,computer26(1) type c,computer27(1) type c,computer28(1) type c,
+      computer29(1) type c,computer30(1) type c,computer31(1) type c,computer32(1) type c,
+      computer33(1) type c,computer34(1) type c,computer35(1) type c,computer36(1) type c,
+      computer37(1) type c,computer38(1) type c,computer39(1) type c,computer40(1) type c,
+      computer41(1) type c,computer42(1) type c,computer43(1) type c,computer44(1) type c,
+      computer45(1) type c,computer46(1) type c,computer47(1) type c,computer48(1) type c,
+      computer49(1) type c.
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abapship_ui DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+class zcl_abapship_ui definition.
+  public section.
+
+    types: begin of ty_taken,
+           taken type i,
+           end of ty_taken.
+
+    methods constructor
+      importing
+        value(name) type char10.
+
+    methods dispatch.
+
+    methods draw_table.
+
+    methods place_computer_ships.
+
+    methods choose_orientation
+    importing ship type char03
+    changing t_taken type any.
+
+    methods place_boat
+    importing boat type c
+              cell type string.
+
+    methods place_boat_detail
+    importing
+              ship type char03
+              taken type char03
+    changing  line type i
+              number type char_02
+              limit type i.
+
+    methods hit_computer
+    importing number type i.
+
+    methods hit_player.
+
+  private section.
+    data: name type char10,
+          t_taken type standard table of ty_taken.
+
+endclass.                    "zcl_abapship_ui DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abapship_ui IMPLEMENTATION                           *
+*----------------------------------------------------------------------*
+class zcl_abapship_ui implementation.
+
+  method constructor.
+
+    me->name = name.
+    call method draw_table.
+    call method place_computer_ships.
+
+  endmethod.                    "constructor
+
+  method dispatch.
+
+    data: t_results type match_result_tab.
+
+    data: param type string,
+          l_number type i.
+
+    field-symbols: <fs> type any,
+                   <fs_results> like line of t_results.
+
+    get cursor field param.
+    if param is initial.
+      return.
+    endif.
+
+    case param.
+      when 'BOAT1' or 'BOAT2' or 'BOAT3' or 'BOAT4' or 'BOAT5'.
+        assign (param) to <fs>.
+        param_c = <fs>.
+      when 'PLAY'.
+        if g_a eq 'X' and g_b eq 'X' and g_d eq 'X' and
+           g_s eq 'X' and g_p eq 'X'.
+          g_can_play = 'X'.
+          message i000(su) with 'Let''s the war begin...'.
+        endif.
+      when 'G_HORIZONTAL'.
+        if g_vertical ne space.
+          message i000(su) with 'You must choose Horizontal or Vertical'.
+        else.
+          read line 7.
+          if g_horizontal eq space.
+            g_horizontal = 'X'.
+            modify line 7 field value g_horizontal from g_horizontal.
+          else.
+            g_horizontal = space.
+            modify line 7 field value g_horizontal from g_horizontal.
+          endif.
+        endif.
+      when 'G_VERTICAL'.
+        if g_horizontal ne space.
+          message i000(su) with 'You must choose Horizontal or Vertical'.
+        else.
+          read line 7.
+          if g_vertical eq space.
+            g_vertical = 'X'.
+            modify line 7 field value g_vertical from g_vertical.
+          else.
+            g_vertical = space.
+            modify line 7 field value g_vertical from g_vertical.
+          endif.
+        endif.
+      when others.
+        if param+0(1) eq 'C' and g_can_play eq space.
+          message i000(su) with 'You must start the game first'.
+        else.
+          if g_can_play ne space.
+            find regex '\d.*' in param results t_results.
+            read table t_results assigning <fs_results> index 1.
+            l_number = param+<fs_results>-offset(<fs_results>-length).
+
+            call method hit_computer
+              exporting
+                number = l_number.
+          endif.
+          if g_can_play eq space.
+            if param_c is initial.
+              message i000(su) with 'You must choose a Boat first'.
+            else.
+              if g_vertical eq space and g_horizontal eq space.
+                message i000(su) with 'You must choose an orientation'.
+              else.
+                call method place_boat
+                  exporting
+                    boat = param_c
+                    cell = param.
+              endif.
+            endif.
+          endif.
+        endif.
+    endcase.
+
+  endmethod.                    "dispatch
+
+  method draw_table.
+
+    data: l_player(2) type c,
+          l_computer(2) type c,
+          l_name type string,
+          l_counter type i.
+
+    field-symbols: <field> type any.
+
+    write:/ '-----------------------------------------'.
+    write:/ '|','Welcome', name centered, 'to ABAP Ship 1.0  ','|'.
+    write:/ '-----------------------------------------'.
+
+    skip 1.
+
+    write:/ 'Aircraft Carrier',20 'BattleShip',33 'Destroyer', 45 'Submarine', 57 'Patrol Boat', 75 'Horizontal', 90 'Vertical'.
+    write:/4 '/*******\',21 '/******\',34 '/*****\',46 '/*****\',59 '/****\'.
+    write:/4 '|--',boat1 hotspot on,'--|',21 '|--',boat2 hotspot on,'-|',34 '|-',boat3 hotspot on,'-|',
+           46 '|-',boat4 hotspot on,'-|',59 '|-',boat5 hotspot on,'|',
+           79 g_horizontal hotspot on color 5, 93 g_vertical hotspot on color 5.
+    write:/4 '\*******/',21 '\******/',34 '\*****/',46 '\*****/',59 '\****/'.
+
+    skip 1.
+
+    write:/12 'Player', 80 'Computer'.
+
+    skip 1.
+
+    do 7 times.
+      l_counter = l_counter + 1.
+      if l_counter eq 1.
+        write: '-----------------------------', 70 '-----------------------------'.
+      endif.
+      write:/ '|'.
+      do 7 times.
+        l_player = l_player + 1.
+        concatenate 'PLAYER' l_player into l_name.
+        assign (l_name) to <field>.
+        write: <field> color 2 hotspot on,'|'.
+      enddo.
+      write:70 '|'.
+      do 7 times.
+        l_computer = l_computer + 1.
+        concatenate 'COMPUTER' l_computer into l_name.
+        assign (l_name) to <field>.
+        write: <field> color 2 hotspot on,'|'.
+      enddo.
+      write:/ '-----------------------------', 70 '-----------------------------'.
+    enddo.
+
+    write:/46 '--------'.
+    write:/46 '|',play hotspot on,'|'.
+    write:/46 '--------'.
+
+  endmethod.                    "draw_table
+
+  method place_computer_ships.
+
+    call method choose_orientation
+      exporting
+        ship    = 'c_a'
+      changing
+        t_taken = t_taken.
+    call method choose_orientation
+      exporting
+        ship    = 'c_b'
+      changing
+        t_taken = t_taken.
+    call method choose_orientation
+      exporting
+        ship    = 'c_d'
+      changing
+        t_taken = t_taken.
+    call method choose_orientation
+      exporting
+        ship    = 'c_s'
+      changing
+        t_taken = t_taken.
+    call method choose_orientation
+      exporting
+        ship    = 'c_p'
+      changing
+        t_taken = t_taken.
+
+  endmethod.                    "place_computer_ships
+
+  method choose_orientation.
+
+    data: l_rand type i,
+          l_rand_c(2) type c,
+          l_back type i,
+          l_orientation type i,
+          l_name type string,
+          l_mod type i,
+          l_flag type c,
+          l_try type i,
+          l_ship_flag type c,
+          l_limit type i.
+
+    field-symbols: <fs> type any,
+                   <ship> type any,
+                   <fs_taken> like line of me->t_taken.
+
+    create object cl_random type cl_random_number.
+    call method cl_random->if_random_number~init.
+
+    while l_flag eq space.
+      call method cl_random->if_random_number~get_random_int
+        exporting
+          i_limit  = 3
+        receiving
+          r_random = l_orientation.
+      if l_orientation eq 0.
+        l_flag = space.
+      else.
+        l_flag = 'X'.
+      endif.
+    endwhile.
+
+    while l_ship_flag eq space.
+      call method cl_random->if_random_number~get_random_int
+        exporting
+          i_limit  = 50
+        receiving
+          r_random = l_rand.
+      if l_rand eq 0.
+        l_ship_flag = space.
+      else.
+        read table me->t_taken assigning <fs_taken>
+        with key taken = l_rand.
+        if sy-subrc eq 0 and <fs_taken> is  assigned.
+          continue.
+        endif.
+
+        l_limit = l_rand / 7.
+        l_mod = l_rand mod 7.
+        if l_mod ge 1 and l_mod le 3.
+          l_limit = l_limit + 1.
+        endif.
+        l_limit = l_limit * 7.
+
+        assign (ship) to <ship>.
+        l_try = ( l_rand + <ship> ) - 1.
+        l_rand_c = l_rand.
+
+        if l_orientation eq 1.
+          if l_try gt l_limit.
+            l_ship_flag = space.
+            continue.
+          else.
+            clear: l_back.
+            l_ship_flag = 'X'.
+            do <ship> times.
+              l_back = l_back + 1.
+              concatenate 'COMPUTER' l_rand_c into l_name.
+              assign (l_name) to <fs>.
+              if <fs> eq 'O'.
+                do l_back times.
+                  l_rand_c = l_rand_c - 1.
+                  concatenate 'COMPUTER' l_rand_c into l_name.
+                  assign (l_name) to <fs>.
+                  <fs> = space.
+                enddo.
+                l_ship_flag = space.
+                exit.
+              else.
+                <fs> = 'O'.
+                append initial line to me->t_taken assigning <fs_taken>.
+                <fs_taken>-taken = l_rand_c.
+                l_rand_c = l_rand_c + 1.
+              endif.
+            enddo.
+          endif.
+        else.
+          l_limit = l_rand / 7.
+          l_mod = l_rand mod 7.
+          if l_mod ge 1 and l_mod le 3.
+            l_limit = l_limit + 1.
+          endif.
+          l_try = l_rand_c + ( ( <ship> - 1 ) * 7 ).
+          l_limit = l_rand_c + ( ( 7 - l_limit ) * 7 ).
+          if l_try gt l_limit.
+            l_ship_flag = space.
+            continue.
+          else.
+            clear: l_back.
+            l_ship_flag = 'X'.
+            do <ship> times.
+              l_back = l_back + 7.
+              concatenate 'COMPUTER' l_rand_c into l_name.
+              assign (l_name) to <fs>.
+              if <fs> eq 'O'.
+                l_back = l_back / 7.
+                do l_back times.
+                  if l_rand_c gt 7.
+                    l_rand_c = l_rand_c - 7.
+                  endif.
+                  concatenate 'COMPUTER' l_rand_c into l_name.
+                  assign (l_name) to <fs>.
+                  <fs> = space.
+                enddo.
+                l_ship_flag = space.
+                exit.
+              endif.
+              <fs> = 'O'.
+              append initial line to me->t_taken assigning <fs_taken>.
+              <fs_taken>-taken = l_rand_c.
+              l_rand_c = l_rand_c + 7.
+            enddo.
+          endif.
+        endif.
+      endif.
+    endwhile.
+
+  endmethod.                    "choose_orientation
+
+  method place_boat.
+
+    data: l_name type string,
+          l_number(2) type c,
+          l_line type i,
+          l_limit type i,
+          l_mod type i.
+
+    data: t_results type match_result_tab.
+
+    field-symbols: <fs_results> like line of t_results.
+
+    find regex '\d.*' in cell results t_results.
+    read table t_results assigning <fs_results> index 1.
+    l_number = cell+<fs_results>-offset(<fs_results>-length).
+
+    l_limit = l_number / 7.
+    l_mod = l_number mod 7.
+    if l_mod ge 1 and l_mod lt 4.
+      l_limit = l_limit + 1.
+    endif.
+
+    l_line = ( l_limit * 2 ) + 11.
+
+    case boat.
+      when 'A'.
+        call method place_boat_detail
+          exporting
+            ship   = 'c_a'
+            taken  = 'g_a'
+          changing
+            line   = l_line
+            number = l_number
+            limit  = l_limit.
+      when 'B'.
+        call method place_boat_detail
+          exporting
+            ship   = 'c_b'
+            taken  = 'g_b'
+          changing
+            line   = l_line
+            number = l_number
+            limit  = l_limit.
+      when 'D'.
+        call method place_boat_detail
+          exporting
+            ship   = 'c_d'
+            taken  = 'g_d'
+          changing
+            line   = l_line
+            number = l_number
+            limit  = l_limit.
+      when 'S'.
+        call method place_boat_detail
+          exporting
+            ship   = 'c_s'
+            taken  = 'g_s'
+          changing
+            line   = l_line
+            number = l_number
+            limit  = l_limit.
+      when 'P'.
+        call method place_boat_detail
+          exporting
+            ship   = 'c_p'
+            taken  = 'g_p'
+          changing
+            line   = l_line
+            number = l_number
+            limit  = l_limit.
+    endcase.
+
+  endmethod.                    "place_boat
+
+  method place_boat_detail.
+
+    data: l_name type string,
+          l_try type i,
+          l_back type i,
+          l_ship_line type i.
+
+    field-symbols: <fs> type any,
+                   <ship> type any,
+                   <taken> type any.
+
+    assign (ship) to <ship>.
+    assign (taken) to <taken>.
+
+    if <taken> eq space.
+      if g_horizontal eq 'X'.
+        l_try = ( number + <ship> ) - 1.
+        l_ship_line = limit.
+        limit = limit * 7.
+        if l_try gt limit.
+          message i000(su) with 'There''s no enough space. Try another cell'.
+        else.
+          clear: l_back.
+          <taken> = 'X'.
+          read line line.
+          do <ship> times.
+            l_back = l_back + 1.
+            concatenate 'PLAYER' number into l_name.
+            assign (l_name) to <fs>.
+            if <fs> eq 'O'.
+              do l_back times.
+                number = number - 1.
+                concatenate 'PLAYER' number into l_name.
+                assign (l_name) to <fs>.
+                <fs> = space.
+                modify line line field value <fs> from <fs> field format <fs> color 2.
+              enddo.
+              <taken> = space.
+              message i000(su) with 'That cell is already taken. Try another cell'.
+              exit.
+            endif.
+            modify line line field value <fs> from <fs> field format <fs> color 7.
+            <fs> = 'O'.
+            number = number + 1.
+          enddo.
+        endif.
+      elseif g_vertical eq 'X'.
+        l_try = number + ( ( <ship> - 1 ) * 7 ).
+        limit = number + ( ( 7 - limit ) * 7 ).
+        if l_try gt limit.
+          message i000(su) with 'There''s no enough space. Try another cell'.
+        else.
+          <taken> = 'X'.
+          clear: l_back.
+          do <ship> times.
+            l_back = l_back + 7.
+            read line line.
+            concatenate 'PLAYER' number into l_name.
+            assign (l_name) to <fs>.
+            if <fs> eq 'O'.
+              l_back = l_back / 7.
+              do l_back times.
+                if number gt 7.
+                  number = number - 7.
+                endif.
+                if line gt 13.
+                  line = line - 2.
+                endif.
+                concatenate 'PLAYER' number into l_name.
+                assign (l_name) to <fs>.
+                <fs> = space.
+                modify line line field value <fs> from <fs> field format <fs> color 2.
+              enddo.
+              <taken> = space.
+              message i000(su) with 'That cell is already taken. Try another cell'.
+              exit.
+            endif.
+            modify line line field value <fs> from <fs> field format <fs> color 7.
+            <fs> = 'O'.
+            number = number + 7.
+            line = line + 2.
+          enddo.
+        endif.
+      endif.
+    else.
+      message i000(su) with 'The ship is already in place. Try another one'.
+    endif.
+
+  endmethod.                    "place_boat_detail
+
+  method hit_computer.
+
+    data:l_number type char_02,
+         l_name type string,
+         l_line type i,
+         l_mod type i.
+
+    field-symbols: <fs> type any.
+
+    l_number = number.
+    l_line = l_number / 7.
+    l_mod = l_number mod 7.
+    if l_mod ge 1 and l_mod le 3.
+      l_line = l_line + 1.
+    endif.
+
+    l_line = ( l_line * 2 ) + 11.
+
+    concatenate 'COMPUTER' l_number into l_name.
+    assign (l_name) to <fs>.
+
+    read line l_line.
+    if <fs> eq space.
+      <fs> = 'X'.
+      modify line l_line field value <fs> from <fs>.
+    elseif <fs> eq 'O'.
+      <fs> = 'X'.
+      g_player_counter = g_player_counter + 1.
+      modify line l_line field value <fs> from <fs> field format <fs> color 6.
+    endif.
+
+    if g_player_counter eq 17.
+      message i000(su) with 'Congratulations! You won!'.
+      exit.
+    endif.
+
+    call method hit_player.
+
+  endmethod.                    "hit_computer
+
+  method hit_player.
+
+    data: l_rand type i,
+          l_number type char_02,
+          l_flag type c,
+          l_name type string,
+          l_line type i,
+          l_mod type i.
+
+    field-symbols: <fs> type any.
+
+    create object cl_random type cl_random_number.
+    call method cl_random->if_random_number~init.
+
+    while l_flag eq space.
+      call method cl_random->if_random_number~get_random_int
+        exporting
+          i_limit  = 50
+        receiving
+          r_random = l_rand.
+
+      if l_rand eq 0.
+        l_flag = space.
+        continue.
+      else.
+        l_flag = 'X'.
+        l_number = l_rand.
+        l_line = l_number / 7.
+        l_mod = l_number mod 7.
+        if l_mod ge 1 and l_mod le 3.
+          l_line = l_line + 1.
+        endif.
+
+        l_line = ( l_line * 2 ) + 11.
+
+        concatenate 'PLAYER' l_number into l_name.
+        assign (l_name) to <fs>.
+
+        read line l_line.
+        if <fs> eq space.
+          <fs> = 'X'.
+          modify line l_line field value <fs> from <fs>.
+        elseif <fs> eq 'O'.
+          <fs> = 'X'.
+          g_computer_counter = g_computer_counter + 1.
+          modify line l_line field value <fs> from <fs> field format <fs> color 6.
+        endif.
+      endif.
+    endwhile.
+
+    if g_computer_counter eq 17.
+      message i000(su) with 'I''m so sorry...You loose!'.
+      exit.
+    endif.
+
+  endmethod.                    "hit_player
+
+endclass.                    "zcl_abapship_ui IMPLEMENTATION

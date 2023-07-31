@@ -1,0 +1,734 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZCL_ABAPPOKER_UI                                 *
+*&---------------------------------------------------------------------*
+
+constants: text_001 type string value 'Deal',
+           text_002 type string value 'Hold',
+           text_003 type string value 'Hold',
+           text_004 type string value 'Hold',
+           text_005 type string value 'Hold',
+           text_006 type string value 'Hold',
+           text_007 type string value 'BET 1',
+           text_008 type string value 'BET 5',
+           text_009 type string value 'BET 10',
+           text_010 type string value 'BET 25',
+           text_011 type string value 'BET 50',
+           text_012 type string value 'BET 100',
+           c_h(1) type c value 'H',
+           c_d(1) type c value 'D',
+           c_c(1) type c value 'C',
+           c_s(1) type c value 'S'.
+
+data: deal(4) type c value text_001,
+      hold1(4) type c value text_002,
+      hold2(4) type c value text_003,
+      hold3(4) type c value text_004,
+      hold4(4) type c value text_005,
+      hold5(4) type c value text_006,
+      bet1(7) type c value text_007,
+      bet2(7) type c value text_008,
+      bet3(7) type c value text_009,
+      bet4(7) type c value text_010,
+      bet5(7) type c value text_011,
+      bet6(7) type c value text_012.
+
+data: money type i,
+      my_bet type i,
+      my_gain type i,
+      deal_flag type c,
+      you_have(30) type c,
+      g_bet type i.
+
+data: card1(3),
+      card2(3),
+      card3(3),
+      card4(3),
+      card5(3),
+      card6(3),
+      card7(3),
+      card8(3),
+      card9(3),
+      card10(3).
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abappoker_ui DEFINITION                              *
+*----------------------------------------------------------------------*
+class zcl_abappoker_ui definition.
+  public section.
+
+    types: begin of ty_cards,
+           sign(1) type c, "H-Hearts,D-Diamonds,S-Spades,C-Clubs.
+           number(2) type c,                                "1-13
+           end of ty_cards.
+
+    methods constructor
+      importing
+        value(name) type char10.
+
+    methods dispatch.
+
+    methods draw_table.
+
+    methods create_cards
+    changing
+      t_cards type table.
+
+    methods deal_cards
+    changing t_cards type table
+             t_player_cards type table.
+
+    methods place_bet
+    importing
+       value(bet) type i.
+
+    methods check_winner
+    importing t_player_cards type table.
+
+  private section.
+    data: name type char10,
+          t_cards type table of ty_cards,
+          t_player_cards type table of ty_cards,
+          l_hold1 type c,
+          l_hold2 type c,
+          l_hold3 type c,
+          l_hold4 type c,
+          l_hold5 type c.
+
+endclass.                    "zcl_abappoker_ui DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abappoker_ui IMPLEMENTATION                         *
+*----------------------------------------------------------------------*
+class zcl_abappoker_ui implementation.
+
+  method constructor.
+
+    me->name = name.
+    call method draw_table.
+    call method create_cards
+      changing
+        t_cards = me->t_cards.
+
+  endmethod.                    "constructor
+
+  method draw_table.
+
+    money = 2000.
+
+    write:/ '-----------------------------------------',80 '------------------------------------'.
+    write:/ '|','Welcome', name centered, 'to Video Poker 1.0','|',80 '|        Nothing - Lose bet        |'.
+    write:/ '-----------------------------------------',80 '|      Jacks or Better - 1 bet     |'.
+
+    write:/ '--------',10 '-------',18 '-------',26 '--------',35 '--------',44 '--------',
+         53 '---------',
+        80 '|       Two Pair - 2 bet           |'.
+    format hotspot on.
+    write:/ '|', deal  no-gap,' |',10 '|',11 bet1,18 '|',19 bet2,16 '|',24 '|',26 '|',27 bet3,33 '|',
+         35 '|',36 bet4,42 '|',44 '|',45 bet5,51 '|',53 '|',54 bet6,61 '|',
+         80 '|     Three of a Kind - 3 bet      |'.
+    format hotspot off.
+    write:/ '--------',10 '-------',18 '-------',26'--------',35 '--------',44 '--------',
+         53 '---------',
+        80 '|       Straight - 4 bet           |'.
+    write:/80 '|          Flush - 5 bet           |'.
+    write:/80 '|        Full House - 6 bet        |'.
+    write:/80 '|      Four of a Kind - 7 bet      |'.
+    write:/80 '|     Straight Flush - 10 bet      |'.
+    write:/80 '|----------------------------------|'.
+
+    write:/ ' ----------- ',' ----------- ',' ----------- ',' ----------- ',' ----------- '.
+    write:/ '|',card1,'      |','|',card2,'      |','|',card3,'      |','|',card4,'      |',
+            '|',card5,'      |',80 '   You have: ', money, 'dollars'.
+    write:/ '|           |','|           |','|           |','|           |','|           |'.
+    write:/ '|           |','|           |','|           |','|           |','|           |'.
+    write:/ '|           |','|           |','|           |','|           |','|           |',80 '   You have bet: ',my_bet, 'dollars'.
+    write:/ '|           |','|           |','|           |','|           |','|           |'.
+    write:/ '|           |','|           |','|           |','|           |','|           |'.
+    write:/ '|           |','|           |','|           |','|           |','|           |',80 '   You have won: ',my_gain, 'dollars'.
+    write:/ '|',card6,'      |','|',card7,'      |','|',card8,'      |','|',card9,'      |','|',card10,'      |'.
+    write:/ ' ----------- ',' ----------- ',' ----------- ',' ----------- ',' ----------- '.
+
+    skip 1.
+
+    format hotspot on.
+    write:/5 hold1 color 3,19 hold2 color 3,33 hold3 color 3,47 hold4 color 3,61 hold5 color 3.
+    format hotspot off.
+
+    skip 1.
+    write:/20 'You have: ', you_have.
+
+  endmethod.                    "draw_table
+
+  method dispatch.
+
+    define change_hold.
+      if &1 eq space.
+        &1 = 'X'.
+        read line 23.
+        modify line 23 field value &2 from &2 field format &2 color 1.
+      else.
+        &1 = space.
+        modify line 23 field value &2 from &2 field format &2 color 3.
+      endif.
+    end-of-definition.
+
+    data: param type string.
+
+    get cursor field param.
+    if param is initial.
+      return.
+    endif.
+
+    case param.
+      when 'DEAL'.
+        if deal_flag eq 0.
+          message i000(su) with 'You must place a bet first'.
+        elseif deal_flag eq 1.
+          call method deal_cards
+            changing
+              t_cards        = t_cards
+              t_player_cards = t_player_cards.
+          deal_flag = 2.
+        elseif deal_flag eq 2.
+          call method deal_cards
+            changing
+              t_cards        = t_cards
+              t_player_cards = t_player_cards.
+        endif.
+      when 'BET1'.
+        call method place_bet
+          exporting
+            bet = 1.
+      when 'BET2'.
+        call method place_bet
+          exporting
+            bet = 5.
+      when 'BET3'.
+        call method place_bet
+          exporting
+            bet = 10.
+      when 'BET4'.
+        call method place_bet
+          exporting
+            bet = 25.
+      when 'BET5'.
+        call method place_bet
+          exporting
+            bet = 50.
+      when 'BET6'.
+        call method place_bet
+          exporting
+            bet = 100.
+      when 'HOLD1'.
+        if deal_flag eq 2.
+          change_hold me->l_hold1 hold1.
+        endif.
+      when 'HOLD2'.
+        if deal_flag eq 2.
+          change_hold me->l_hold2 hold2.
+        endif.
+      when 'HOLD3'.
+        if deal_flag eq 2.
+          change_hold me->l_hold3 hold3.
+        endif.
+      when 'HOLD4'.
+        if deal_flag eq 2.
+          change_hold me->l_hold4 hold4.
+        endif.
+      when 'HOLD5'.
+        if deal_flag eq 2.
+          change_hold me->l_hold5 hold5.
+        endif.
+    endcase.
+
+  endmethod.                    "dispatch
+
+  method create_cards.
+
+    data: l_number type i,
+          l_sign type i,
+          l_sign_c type c.
+    field-symbols: <fs_cards> like line of me->t_cards.
+
+    clear: t_cards,t_player_cards.
+    refresh: t_cards,t_player_cards.
+
+    do 4 times.
+      clear l_number.
+      l_sign = l_sign + 1.
+      case l_sign.
+        when 1.
+          l_sign_c = 'H'.
+        when 2.
+          l_sign_c = 'D'.
+        when 3.
+          l_sign_c = 'C'.
+        when 4.
+          l_sign_c = 'S'.
+      endcase.
+      do 13 times.
+        l_number = l_number + 1.
+        append initial line to t_cards
+        assigning <fs_cards>.
+        <fs_cards>-sign = l_sign_c.
+        <fs_cards>-number = l_number.
+      enddo.
+    enddo.
+
+  endmethod.                    "create_cards
+
+  method deal_cards.
+
+    define change_flag.
+      if &1 eq space.
+        &2 = 'X'.
+      else.
+        &2 = space.
+      endif.
+    end-of-definition.
+
+    data: cl_random type ref to cl_random_number.
+
+    data: g_rand type i,
+          g_val type c,
+          g_quan type i,
+          g_name type string,
+          g_name_aux type string,
+          g_change_flag type c,
+          g_card(3) type c,
+          g_tabix(2) type c,
+          g_tabix_aux(2) type c,
+          g_index type c,
+          g_hold1 type c,
+          g_hold2 type c,
+          g_hold3 type c,
+          g_hold4 type c,
+          g_hold5 type c.
+
+    data: data_cards type ref to data.
+
+    field-symbols: <fs_cards> like line of me->t_cards,
+                   <fs_data_cards> like line of me->t_cards,
+                   <fs_player_cards> like line of me->t_player_cards,
+                   <line> type any,
+                   <line_aux> type any.
+
+    create data data_cards type me->ty_cards.
+    assign data_cards->* to <fs_data_cards>.
+
+    create object cl_random type cl_random_number.
+    call method cl_random->if_random_number~init.
+
+    if deal_flag eq 2.
+      do 5 times.
+        if me->l_hold5 eq space and g_hold5 eq space.
+          g_hold5 = 'X'.
+          delete t_player_cards index 5.
+        elseif me->l_hold4 eq space and g_hold4 eq space.
+          g_hold4 = 'X'.
+          delete t_player_cards index 4.
+        elseif me->l_hold3 eq space and g_hold3 eq space.
+          g_hold3 = 'X'.
+          delete t_player_cards index 3.
+        elseif me->l_hold2 eq space and g_hold2 eq space.
+          g_hold2 = 'X'.
+          delete t_player_cards index 2.
+        elseif me->l_hold1 eq space and g_hold1 eq space.
+          g_hold1 = 'X'.
+          delete t_player_cards index 1.
+        endif.
+      enddo.
+    endif.
+
+    clear g_tabix.
+
+    while g_val eq space.
+      call method cl_random->if_random_number~get_random_int
+        exporting
+          i_limit  = 53
+        receiving
+          r_random = g_rand.
+      read table t_cards assigning <fs_cards>
+      index g_rand.
+      if sy-subrc eq 0 and <fs_cards> is assigned and <fs_cards>-sign ne space.
+        g_tabix = g_tabix + 1.
+        if deal_flag eq 1.
+          append initial line to t_player_cards assigning <fs_player_cards>.
+          <fs_player_cards>-sign = <fs_cards>-sign.
+          <fs_player_cards>-number = <fs_cards>-number.
+          <fs_cards>-sign = space.
+          <fs_cards>-number = space.
+        else.
+          <fs_data_cards>-sign = <fs_cards>-sign.
+          <fs_data_cards>-number = <fs_cards>-number.
+          <fs_cards>-sign = space.
+          <fs_cards>-number = space.
+          case g_tabix.
+            when 1.
+              if g_hold1 eq 'X'.
+                g_hold1 = space.
+                g_index = 1.
+              else.
+                continue.
+              endif.
+            when 2.
+              if g_hold2 eq 'X'.
+                g_hold2 = space.
+                g_index = 2.
+              else.
+                continue.
+              endif.
+            when 3.
+              if g_hold3 eq 'X'.
+                g_hold3 = space.
+                g_index = 3.
+              else.
+                continue.
+              endif.
+            when 4.
+              if g_hold4 eq 'X'.
+                g_hold4 = space.
+                g_index = 4.
+              else.
+                continue.
+              endif.
+            when 5.
+              if g_hold5 eq 'X'.
+                g_hold5 = space.
+                g_index = 5.
+              else.
+                continue.
+              endif.
+          endcase.
+          insert <fs_data_cards> into t_player_cards index g_index.
+        endif.
+      endif.
+      describe table t_player_cards lines g_quan.
+      if g_quan eq 5.
+        g_val = 'X'.
+      endif.
+    endwhile.
+
+    clear g_tabix.
+
+    do 10 times.
+      g_tabix = g_tabix + 1.
+      g_tabix_aux = g_tabix_aux + 1.
+      if g_tabix gt 5.
+        g_tabix = 1.
+      endif.
+      read table t_player_cards assigning <fs_player_cards>
+      index g_tabix.
+      case <fs_player_cards>-sign.
+        when 'H'.
+          concatenate <fs_player_cards>-number c_h
+          into g_card.
+        when 'S'.
+          concatenate <fs_player_cards>-number c_s
+          into g_card.
+        when 'C'.
+          concatenate <fs_player_cards>-number c_c
+          into g_card.
+        when 'D'.
+          concatenate <fs_player_cards>-number c_d
+          into g_card.
+      endcase.
+
+      case g_tabix.
+        when 1.
+          change_flag me->l_hold1 g_change_flag.
+        when 2.
+          change_flag me->l_hold2 g_change_flag.
+        when 3.
+          change_flag me->l_hold3 g_change_flag.
+        when 4.
+          change_flag me->l_hold4 g_change_flag.
+        when 5.
+          change_flag me->l_hold5 g_change_flag.
+      endcase.
+
+      if g_change_flag eq 'X'.
+        concatenate 'card' g_tabix into g_name.
+        assign (g_name) to <line>.
+        concatenate 'card' g_tabix_aux into g_name_aux.
+        assign (g_name_aux) to <line_aux>.
+        read line 13.
+        modify line 13 field value <line> from g_card.
+        if g_tabix_aux gt 5.
+          read line 20.
+          modify line 20 field value <line_aux> from g_card.
+        endif.
+      endif.
+    enddo.
+
+    if deal_flag eq 2.
+      read line 23.
+      modify line 23 field value hold1 from hold1 field format hold1 color 3.
+      modify line 23 field value hold2 from hold2 field format hold2 color 3.
+      modify line 23 field value hold3 from hold3 field format hold3 color 3.
+      modify line 23 field value hold4 from hold4 field format hold4 color 3.
+      modify line 23 field value hold5 from hold5 field format hold5 color 3.
+
+      call method check_winner
+        exporting
+          t_player_cards = t_player_cards.
+
+    endif.
+
+  endmethod.                    "deal_cards
+
+  method place_bet.
+
+    if money eq 0.
+      message i000(su) with 'You don''t have enough money!'.
+    else.
+      if my_bet ge money.
+        message i000(su) with 'You don''t have enough money!'.
+      else.
+        deal_flag = 1.
+        g_bet = g_bet + bet.
+        my_bet = g_bet.
+
+        read line 16.
+        modify line 16 field value my_bet from g_bet.
+
+        read line 25.
+        modify line 25 field value you_have from space.
+      endif.
+    endif.
+
+  endmethod.                    "place_bet
+
+  method check_winner.
+
+    types: begin of ty_cards,
+           sign(1) type c, "H-Hearts,D-Diamonds,S-Spades,C-Clubs.
+           number(2) type c,                                "1-13
+           end of ty_cards.
+
+    data: lt_player type standard table of ty_cards.
+
+    data: l_card1(1) type c,
+          l_card2(1) type c,
+          l_card3(1) type c,
+          l_card4(1) type c,
+          l_tabix type i,
+          l_number type i,
+          l_number_aux type i,
+          l_sign1 type c,
+          l_sign2 type c,
+          l_sign3 type c,
+          l_sign4 type c,
+          l_sign5 type c,
+          l_is_flush type c,
+          l_max_pair1 type i,
+          l_max_pair2 type i,
+          l_max_pair3 type i,
+          l_max_pair4 type i,
+          l_subtabix type c,
+          l_you_have(30) type c.
+
+    field-symbols: <fs_player_cards> like line of me->t_player_cards,
+                   <fs_player> like line of lt_player,
+                   <fs_player_aux> like line of lt_player.
+
+    lt_player[] = t_player_cards[].
+
+    loop at t_player_cards assigning <fs_player_cards>.
+      l_tabix = l_tabix + 1.
+      case l_tabix.
+        when 1.
+          l_sign1 = <fs_player_cards>-sign.
+        when 2.
+          l_sign2 = <fs_player_cards>-sign.
+        when 3.
+          l_sign3 = <fs_player_cards>-sign.
+        when 4.
+          l_sign4 = <fs_player_cards>-sign.
+        when 5.
+          l_sign5 = <fs_player_cards>-sign.
+      endcase.
+      do 4 times.
+        read table lt_player assigning <fs_player>
+        with key number = <fs_player_cards>-number.
+        if sy-subrc eq 0 and <fs_player> is assigned.
+          case l_tabix.
+            when 1.
+              l_card1 = l_card1 + 1.
+              l_max_pair1 = <fs_player_cards>-number.
+            when 2.
+              l_card2 = l_card2 + 1.
+              l_max_pair2 = <fs_player_cards>-number.
+            when 3.
+              l_card3 = l_card3 + 1.
+              l_max_pair3 = <fs_player_cards>-number.
+            when 4.
+              l_card4 = l_card4 + 1.
+              l_max_pair4 = <fs_player_cards>-number.
+          endcase.
+          delete lt_player index sy-tabix.
+        endif.
+      enddo.
+    endloop.
+
+    if l_sign1 eq l_sign2 and l_sign2 eq l_sign3 and
+       l_sign3 eq l_sign4 and l_sign4 eq l_sign5.
+      l_is_flush = 'X'.
+      l_you_have = 'Flush'.
+      my_bet = my_bet * 5.
+      money = money + my_bet.
+      read line 13.
+      modify line 13 field value money from money.
+      read line 16.
+      modify line 16 field value my_bet from 0.
+    else.
+      l_is_flush = space.
+    endif.
+
+    lt_player[] = t_player_cards[].
+
+    sort lt_player by number ascending.
+
+    l_subtabix = 1.
+
+    loop at lt_player assigning <fs_player>.
+      l_subtabix = l_subtabix + 1.
+      if l_subtabix eq 6.
+        exit.
+      endif.
+      l_number = <fs_player>-number + 1.
+      read table lt_player assigning <fs_player_aux>
+      index l_subtabix.
+      l_number_aux = <fs_player_aux>-number.
+      if l_number eq l_number_aux.
+        continue.
+      else.
+        exit.
+      endif.
+    endloop.
+
+    if l_is_flush eq 'X'.
+      if l_subtabix eq 6.
+        l_you_have = 'Straight Flush'.
+        my_bet = my_bet * 10.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+    else.
+      if l_subtabix eq 6.
+        l_you_have = 'Straight'.
+        my_bet = my_bet * 4.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+
+      if l_subtabix ne 6.
+        if ( l_card1 le 1 and l_card2 le 1 and l_card3 le 1 and l_card4 le 1 ).
+          money = money - my_bet.
+          l_you_have = 'Nothing at all'.
+          read line 13.
+          modify line 13 field value money from money.
+          read line 16.
+          modify line 16 field value my_bet from 0.
+        endif.
+      endif.
+
+      if ( l_card1 eq 2 and l_card2 le 1 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 eq 2 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 eq 2 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 le 1 and l_card4 eq 2 ).
+        l_you_have = 'One pair'.
+        if l_max_pair1 lt 11 and l_max_pair2 lt 11 and l_max_pair3 lt 11 and l_max_pair4 lt 11.
+          money = money - my_bet.
+          read line 13.
+          modify line 13 field value money from money.
+          read line 16.
+          modify line 16 field value my_bet from 0.
+        else.
+          read line 16.
+          modify line 16 field value my_bet from 0.
+        endif.
+      endif.
+
+      if ( l_card1 eq 2 and l_card2 eq 2 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 eq 2 and l_card2 le 1 and l_card3 eq 2 and l_card4 le 1 ) or
+         ( l_card1 eq 2 and l_card2 le 1 and l_card3 le 1 and l_card4 eq 2 ) or
+         ( l_card1 le 1 and l_card2 eq 2 and l_card3 eq 2 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 eq 2 and l_card3 le 1 and l_card4 eq 2 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 eq 2 and l_card4 eq 2 ).
+        l_you_have = 'Two pairs'.
+        my_bet = my_bet * 2.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+
+      if ( l_card1 eq 3 and l_card2 le 1 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 eq 3 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 eq 3 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 le 1 and l_card4 eq 3 ).
+        l_you_have = 'Three of a kind'.
+        my_bet = my_bet * 3.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+
+      if ( l_card1 eq 4 and l_card2 le 1 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 eq 4 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 eq 4 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 le 1 and l_card4 eq 4 ).
+        l_you_have = 'Four of a kind'.
+        my_bet = my_bet * 7.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+
+      if ( l_card1 eq 3 and l_card2 eq 2 and l_card3 le 1 and l_card4 le 1 ) or
+         ( l_card1 eq 3 and l_card2 le 1 and l_card3 eq 2 and l_card4 le 1 ) or
+         ( l_card1 eq 3 and l_card2 le 1 and l_card3 le 1 and l_card4 eq 2 ) or
+         ( l_card1 le 1 and l_card2 eq 3 and l_card3 eq 2 and l_card4 le 1 ) or
+         ( l_card1 le 1 and l_card2 eq 3 and l_card3 le 1 and l_card4 eq 2 ) or
+         ( l_card1 le 1 and l_card2 le 1 and l_card3 eq 3 and l_card4 eq 2 ).
+        l_you_have = 'Full House'.
+        my_bet = my_bet * 6.
+        money = money + my_bet.
+        read line 13.
+        modify line 13 field value money from money.
+        read line 16.
+        modify line 16 field value my_bet from 0.
+      endif.
+    endif.
+
+    read line 25.
+    modify line 25 field value you_have from l_you_have.
+
+    deal_flag = 0.
+    my_bet = 0.
+    g_bet = 0.
+    me->l_hold1 = space.
+    me->l_hold2 = space.
+    me->l_hold3 = space.
+    me->l_hold4 = space.
+    me->l_hold5 = space.
+
+    call method create_cards
+      changing
+        t_cards = me->t_cards.
+
+  endmethod.                    "check_winner
+
+endclass.                    "zcl_abappoker_ui IMPLEMENTATION

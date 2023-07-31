@@ -1,0 +1,509 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZCL_TICTACABAP_UI                                *
+*&---------------------------------------------------------------------*
+
+DATA: one(1) TYPE c,
+      two(1) TYPE c,
+      three(1) TYPE c,
+      four(1) TYPE c,
+      five(1) TYPE c,
+      six(1) TYPE c,
+      seven(1) TYPE c,
+      eight(1) TYPE c,
+      nine(1) TYPE c,
+      flag_turn(1) TYPE c,
+      play_number TYPE i,
+      who_won(12) TYPE c,
+      can_play TYPE c,
+      lines TYPE i.
+
+DATA: cl_random TYPE REF TO cl_random_number,
+      g_rand TYPE i,
+      g_valid_move_i TYPE i,
+      g_valid_move TYPE char05.
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_tictacabap_ui DEFINITION                              *
+*----------------------------------------------------------------------*
+CLASS zcl_tictacabap_ui DEFINITION.
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_valid_moves,
+           valid_move TYPE i,
+           END OF ty_valid_moves.
+
+    METHODS constructor
+      IMPORTING
+        value(name) TYPE char10.
+
+    METHODS dispatch.
+
+    METHODS draw_table.
+
+    METHODS comp_play
+    IMPORTING valid_move_i TYPE i.
+
+    METHODS get_valid_move
+    EXPORTING
+      valid_move TYPE char05
+      valid_move_i TYPE i
+    CHANGING
+      t_played_moves TYPE table.
+
+    METHODS check_winner.
+
+  PRIVATE SECTION.
+    DATA: name TYPE char10.
+    DATA: t_played_moves TYPE STANDARD TABLE OF ty_valid_moves.
+
+ENDCLASS.                    "ZCL_TICTACABAP_UI DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abappoker_ui IMPLEMENTATION                         *
+*----------------------------------------------------------------------*
+CLASS zcl_tictacabap_ui IMPLEMENTATION.
+
+  METHOD constructor.
+
+    me->name = name.
+    CALL METHOD draw_table.
+
+  ENDMETHOD.                    "constructor
+
+  METHOD draw_table.
+
+    WRITE:/ '------------------------------------------'.
+    WRITE:/ '|','Welcome', name CENTERED, 'to Tic-Tac-ABAP 1.0','|'.
+    WRITE:/ '------------------------------------------'.
+
+    SKIP 1.
+
+    WRITE:/15 one HOTSPOT,' |',two HOTSPOT,'|',three HOTSPOT.
+    WRITE:/15 '-----------'.
+    WRITE:/15 four HOTSPOT,' |',five HOTSPOT,'|',six HOTSPOT.
+    WRITE:/15 '-----------'.
+    WRITE:/15 seven HOTSPOT,' |',eight HOTSPOT,'|',nine HOTSPOT.
+
+    SKIP 1.
+
+    WRITE:/11 'Who won?', who_won.
+
+  ENDMETHOD.                    "draw_table
+
+  METHOD dispatch.
+
+    DATA: param TYPE string.
+
+    FIELD-SYMBOLS: <fs_played_moves> LIKE LINE OF me->t_played_moves.
+
+    GET CURSOR FIELD param.
+    IF param IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    flag_turn = 'X'.
+
+    IF can_play EQ 'X'.
+      CALL FUNCTION 'POPUP_TO_DISPLAY_TEXT'
+        EXPORTING
+          titel        = 'Alert!'
+          textline1    = 'Game is over'
+          start_column = 25
+          start_row    = 6.
+      EXIT.
+    ENDIF.
+
+    CASE param.
+      WHEN 'ONE'.
+        IF one EQ space.
+          READ LINE 5.
+          MODIFY LINE 5 FIELD VALUE one FROM flag_turn.
+          play_number = play_number + 1.
+          one = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 1.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 1.
+        ENDIF.
+      WHEN 'TWO'.
+        IF two EQ space.
+          READ LINE 5.
+          MODIFY LINE 5 FIELD VALUE two FROM flag_turn.
+          play_number = play_number + 1.
+          two = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 2.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 2.
+        ENDIF.
+      WHEN 'THREE'.
+        IF three EQ space.
+          READ LINE 5.
+          MODIFY LINE 5 FIELD VALUE three FROM flag_turn.
+          play_number = play_number + 1.
+          three = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 3.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 3.
+        ENDIF.
+      WHEN 'FOUR'.
+        IF four EQ space.
+          READ LINE 7.
+          MODIFY LINE 7 FIELD VALUE four FROM flag_turn.
+          play_number = play_number + 1.
+          four = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 4.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 4.
+        ENDIF.
+      WHEN 'FIVE'.
+        IF five EQ space.
+          READ LINE 7.
+          MODIFY LINE 7 FIELD VALUE five FROM flag_turn.
+          play_number = play_number + 1.
+          five = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 5.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 5.
+        ENDIF.
+      WHEN 'SIX'.
+        IF six EQ space.
+          READ LINE 7.
+          MODIFY LINE 7 FIELD VALUE six FROM flag_turn.
+          play_number = play_number + 1.
+          six = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 6.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 6.
+        ENDIF.
+      WHEN 'SEVEN'.
+        IF seven EQ space.
+          READ LINE 9.
+          MODIFY LINE 9 FIELD VALUE seven FROM flag_turn.
+          play_number = play_number + 1.
+          seven = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 7.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 7.
+        ENDIF.
+      WHEN 'EIGHT'.
+        IF eight EQ space.
+          READ LINE 9.
+          MODIFY LINE 9 FIELD VALUE eight FROM flag_turn.
+          play_number = play_number + 1.
+          eight = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 8.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 8.
+        ENDIF.
+      WHEN 'NINE'.
+        IF nine EQ space.
+          READ LINE 9.
+          MODIFY LINE 9 FIELD VALUE nine FROM flag_turn.
+          play_number = play_number + 1.
+          nine = 'X'.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 9.
+          CALL METHOD comp_play
+            EXPORTING
+              valid_move_i = 8.
+        ENDIF.
+    ENDCASE.
+
+  ENDMETHOD.                    "dispatch
+
+  METHOD comp_play.
+
+    DATA: l_limit TYPE i.
+
+    FIELD-SYMBOLS: <fs_played_moves> LIKE LINE OF t_played_moves,
+                   <field> TYPE ANY.
+
+    flag_turn = 'O'.
+
+    DESCRIBE TABLE t_played_moves LINES lines.
+
+    CALL METHOD check_winner.
+
+    if can_play eq 'X'.
+      exit.
+    endif.
+
+    CASE valid_move_i.
+      WHEN 1.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 2.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 3.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 4.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 5.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 6.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 7.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 8.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+      WHEN 9.
+        CALL METHOD get_valid_move
+          IMPORTING
+            valid_move     = g_valid_move
+            valid_move_i   = g_valid_move_i
+          CHANGING
+            t_played_moves = t_played_moves.
+        ASSIGN (g_valid_move) TO <field>.
+        READ LINE g_valid_move_i.
+        MODIFY LINE g_valid_move_i FIELD VALUE <field> FROM flag_turn.
+        <field> = 'O'.
+        play_number = play_number + 1.
+    ENDCASE.
+
+  ENDMETHOD.                    "comp_play
+
+  METHOD get_valid_move.
+
+    DATA: l_lines TYPE i,
+          l_flag TYPE c.
+    DATA: lt_played_moves TYPE STANDARD TABLE OF me->ty_valid_moves.
+
+    FIELD-SYMBOLS: <fs_played_moves> LIKE LINE OF lt_played_moves.
+
+    lt_played_moves = t_played_moves[].
+
+    CREATE OBJECT cl_random TYPE cl_random_number.
+    CALL METHOD cl_random->if_random_number~init.
+
+
+    WHILE l_flag EQ space.
+      CALL METHOD cl_random->if_random_number~get_random_int
+        EXPORTING
+          i_limit  = 10
+        RECEIVING
+          r_random = g_rand.
+
+      DESCRIBE TABLE lt_played_moves LINES l_lines.
+
+      IF l_lines EQ 9.
+        EXIT.
+      ENDIF.
+
+      READ TABLE lt_played_moves ASSIGNING <fs_played_moves>
+      WITH KEY valid_move = g_rand.
+
+      IF sy-subrc EQ 0 AND <fs_played_moves> IS ASSIGNED.
+        CONTINUE.
+      ENDIF.
+
+      CASE g_rand.
+        WHEN 1.
+          l_flag = 'X'.
+          g_valid_move_i = 5.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 1.
+          valid_move = 'ONE'.
+        WHEN 2.
+          l_flag = 'X'.
+          g_valid_move_i = 5.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 2.
+          valid_move = 'TWO'.
+        WHEN 3.
+          l_flag = 'X'.
+          g_valid_move_i = 5.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 3.
+          valid_move = 'THREE'.
+        WHEN 4.
+          l_flag = 'X'.
+          g_valid_move_i = 7.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 4.
+          valid_move = 'FOUR'.
+        WHEN 5.
+          l_flag = 'X'.
+          g_valid_move_i = 7.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 5.
+          valid_move = 'FIVE'.
+        WHEN 6.
+          l_flag = 'X'.
+          g_valid_move_i = 7.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 6.
+          valid_move = 'SIX'.
+        WHEN 7.
+          l_flag = 'X'.
+          g_valid_move_i = 9.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 7.
+          valid_move = 'SEVEN'.
+        WHEN 8.
+          l_flag = 'X'.
+          g_valid_move_i = 9.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 8.
+          valid_move = 'EIGHT'.
+        WHEN 9.
+          l_flag = 'X'.
+          g_valid_move_i = 9.
+          APPEND INITIAL LINE TO t_played_moves ASSIGNING <fs_played_moves>.
+          <fs_played_moves>-valid_move = 9.
+          valid_move = 'NINE'.
+      ENDCASE.
+    ENDWHILE.
+
+  ENDMETHOD.                    "get_valid_move
+
+  METHOD check_winner.
+
+    IF one EQ 'X' AND two EQ 'X' AND three EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF one EQ 'O' AND two EQ 'O' AND three EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF four EQ 'X' AND five EQ 'X' AND six EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF four EQ 'O' AND five EQ 'O' AND six EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF seven EQ 'X' AND eight EQ 'X' AND nine EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF seven EQ 'O' AND eight EQ 'O' AND nine EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF one EQ 'X' AND four EQ 'X' AND seven EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF one EQ 'O' AND four EQ 'O' AND seven EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF two EQ 'X' AND five EQ 'X' AND eight EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF two EQ 'O' AND five EQ 'O' AND eight EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF three EQ 'X' AND six EQ 'X' AND nine EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF three EQ 'O' AND six EQ 'O' AND nine EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF one EQ 'X' AND five EQ 'X' AND nine EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF one EQ 'O' AND five EQ 'O' AND nine EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+    IF three EQ 'X' AND five EQ 'X' AND seven EQ 'X'.
+      who_won = 'Player won!'.
+    ELSEIF three EQ 'O' AND five EQ 'O' AND seven EQ 'O'.
+      who_won = 'Computer won!'.
+    ENDIF.
+
+    IF who_won NE space.
+      can_play = 'X'.
+      READ LINE 11.
+      MODIFY LINE 11 FIELD VALUE who_won FROM who_won.
+    ELSEIF who_won EQ space AND lines EQ 9.
+      can_play = 'X'.
+      READ LINE 11.
+      who_won = 'It''s a tie!'.
+      MODIFY LINE 11 FIELD VALUE who_won FROM who_won.
+    ENDIF.
+
+  ENDMETHOD.                    "check_winner
+
+ENDCLASS.                    "ZCL_TICTACABAP_UI IMPLEMENTATION

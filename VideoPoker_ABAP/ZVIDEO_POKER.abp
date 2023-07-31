@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Report  ZVIDEO_POKER                                                *
+*&                                                                     *
+*& Developed by: Alvaro "Blag" Tejada Galindo.                         *
+*& Start day: 19.01.2010                                               *
+*& End day: 20.01.2010                                                 *
+*&---------------------------------------------------------------------*
+
+REPORT zvideo_poker NO STANDARD PAGE HEADING.
+
+INCLUDE zvideo_poker_ui.
+
+DATA: g_ui TYPE REF TO zcl_abappoker_ui.
+
+SELECTION-SCREEN BEGIN OF BLOCK name.
+PARAMETERS: p_name(10) TYPE c.
+SELECTION-SCREEN END OF BLOCK name.
+
+START-OF-SELECTION.
+  SET PF-STATUS 'VIDEOPOKER'.
+
+  CREATE OBJECT g_ui
+    EXPORTING
+      name = p_name.
+
+AT LINE-SELECTION.
+  CALL METHOD g_ui->dispatch.

@@ -1,0 +1,26 @@
+*&---------------------------------------------------------------------*
+*& Report  ZTIC_TAC_ABAP                                               *
+*&                                                                     *
+*& Developed by: Alvaro "Blag" Tejada Galindo.                         *
+*& Start day: 25.01.2010                                               *
+*& End day: 26.01.2010                                                 *
+*&---------------------------------------------------------------------*
+
+report  ztic_tac_abap NO STANDARD PAGE HEADING.
+
+include zcl_tictacabap_ui.
+
+data: g_ui type ref to zcl_tictacabap_ui.
+
+selection-screen begin of block name.
+parameters: p_name(10) type c.
+selection-screen end of block name.
+
+start-of-selection.
+
+  create object g_ui
+    exporting
+      name = p_name.
+
+at line-selection.
+  call method g_ui->dispatch.

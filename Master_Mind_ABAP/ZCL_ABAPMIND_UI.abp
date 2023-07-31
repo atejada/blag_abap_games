@@ -1,0 +1,402 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZCL_ABAPMIND_UI                                  *
+*&---------------------------------------------------------------------*
+
+DATA: welcome TYPE string.
+DATA: custom_container TYPE REF TO cl_gui_custom_container,
+      text_editor TYPE REF TO cl_gui_textedit,
+      ok_code TYPE sy-ucomm,
+      can_play TYPE c,
+      cl_random TYPE REF TO cl_random_number,
+      xtext TYPE tline-tdline,
+      g_rand TYPE i,
+      g_line TYPE string,
+      button_count TYPE c,
+      line_count(2) TYPE c,
+      line1 TYPE string,
+      line2 TYPE string,
+      line3 TYPE string,
+      line4 TYPE string,
+      line5 TYPE string,
+      line6 TYPE string,
+      line7 TYPE string,
+      line8 TYPE string,
+      line9 TYPE string,
+      line10 TYPE string.
+
+CONSTANTS: line_length TYPE i VALUE 254.
+
+*----------------------------------------------------------------------*
+*       CLASS zcl_abapmind_ui DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS zcl_abapmind_ui DEFINITION.
+  PUBLIC SECTION.
+
+    METHODS constructor
+      IMPORTING
+        value(name) TYPE char10.
+
+    METHODS create_text_editor.
+
+    METHODS generate_secret_code
+    CHANGING one TYPE c
+             two TYPE c
+             three TYPE c
+             four TYPE c
+             five TYPE c.
+
+    METHODS pai
+    IMPORTING ok_code TYPE sy-ucomm.
+
+    METHODS pbo.
+
+    METHODS add_to_table
+    IMPORTING value TYPE string
+    CHANGING t_game_lines TYPE table.
+
+    METHODS validate_game
+    IMPORTING line TYPE string
+              one TYPE c
+              two TYPE c
+              three TYPE c
+              four TYPE c
+              five TYPE c.
+
+  PRIVATE SECTION.
+    DATA: name TYPE char10.
+    DATA: g_one TYPE c,
+          g_two TYPE c,
+          g_three TYPE c,
+          g_four TYPE c,
+          g_five TYPE c,
+          g_player_one TYPE c,
+          g_player_two TYPE c,
+          g_player_three TYPE c,
+          g_player_four TYPE c,
+          g_player_five TYPE c.
+    DATA: t_game_lines TYPE STANDARD TABLE OF tline-tdline.
+
+ENDCLASS.                    "ZCL_ABAPMIND_UI DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS ZCL_ABAPMIND_UI IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS zcl_abapmind_ui IMPLEMENTATION.
+
+  METHOD constructor.
+
+    me->name = name.
+    line_count = 1.
+    CONCATENATE 'Welcome' me->name 'to ABAP Mind 1.0'
+    INTO welcome SEPARATED BY space.
+    CALL METHOD create_text_editor.
+    CALL METHOD generate_secret_code
+      CHANGING
+        one   = g_one
+        two   = g_two
+        three = g_three
+        four  = g_four
+        five  = g_five.
+
+  ENDMETHOD.                    "constructor
+
+  METHOD create_text_editor.
+
+    IF text_editor IS INITIAL.
+      CREATE OBJECT custom_container
+        EXPORTING
+          container_name              = 'CUSTOM_CONTROL'
+        EXCEPTIONS
+          cntl_error                  = 1
+          cntl_system_error           = 2
+          create_error                = 3
+          lifetime_error              = 4
+          lifetime_dynpro_dynpro_link = 5.
+
+      CREATE OBJECT text_editor
+        EXPORTING
+          wordwrap_mode              = cl_gui_textedit=>wordwrap_at_fixed_position
+          wordwrap_position          = line_length
+          wordwrap_to_linebreak_mode = cl_gui_textedit=>true
+          parent                     = custom_container
+        EXCEPTIONS
+          error_cntl_create          = 1
+          error_cntl_init            = 2
+          error_cntl_link            = 3
+          error_dp_create            = 4
+          gui_type_not_supported     = 5
+          OTHERS                     = 6.
+
+      CALL METHOD text_editor->set_readonly_mode
+        EXPORTING
+          readonly_mode = 1.
+    ENDIF.
+
+  ENDMETHOD.                    "create_text_editor
+
+  METHOD generate_secret_code.
+
+    TYPES: BEGIN OF ty_numbers,
+           number TYPE i,
+           END OF ty_numbers.
+
+    DATA: l_flag TYPE c.
+    DATA: t_numbers TYPE STANDARD TABLE OF ty_numbers.
+
+    FIELD-SYMBOLS: <fs_numbers> LIKE LINE OF t_numbers.
+
+    CREATE OBJECT cl_random TYPE cl_random_number.
+    CALL METHOD cl_random->if_random_number~init.
+
+    WHILE l_flag EQ space.
+      CALL METHOD cl_random->if_random_number~get_random_int
+        EXPORTING
+          i_limit  = 6
+        RECEIVING
+          r_random = g_rand.
+
+      IF g_rand EQ 0.
+        CONTINUE.
+*      ELSE.
+*        READ TABLE t_numbers ASSIGNING <fs_numbers>
+*        WITH KEY number = g_rand.
+*        IF sy-subrc EQ 0 AND <fs_numbers> IS ASSIGNED.
+*          CONTINUE.
+*        ELSE.
+*          APPEND INITIAL LINE TO t_numbers ASSIGNING <fs_numbers>.
+*          <fs_numbers>-number = g_rand.
+*        ENDIF.
+      ENDIF.
+
+      IF one IS INITIAL.
+        one = g_rand.
+      ELSEIF two IS INITIAL.
+        two = g_rand.
+      ELSEIF three IS INITIAL.
+        three = g_rand.
+      ELSEIF four IS INITIAL.
+        four = g_rand.
+      ELSEIF five IS INITIAL.
+        five = g_rand.
+        l_flag = 'X'.
+      ENDIF.
+
+    ENDWHILE.
+
+  ENDMETHOD.                    "generate_secret_code
+
+  METHOD pai.
+
+    CASE ok_code.
+      WHEN 'BACK' OR 'STOP' OR 'CANCEL'.
+        SET SCREEN 0.
+        LEAVE SCREEN.
+      WHEN 'ONE'.
+        IF can_play EQ space.
+          CONCATENATE g_line '1' INTO g_line SEPARATED BY space.
+          button_count = button_count +  1.
+          CALL METHOD add_to_table
+            EXPORTING
+              value        = g_line
+            CHANGING
+              t_game_lines = t_game_lines.
+        ENDIF.
+      WHEN 'TWO'.
+        IF can_play EQ space.
+          CONCATENATE g_line '2' INTO g_line SEPARATED BY space.
+          button_count = button_count +  1.
+          CALL METHOD add_to_table
+            EXPORTING
+              value        = g_line
+            CHANGING
+              t_game_lines = t_game_lines.
+        ENDIF.
+      WHEN 'THREE'.
+        IF can_play EQ space.
+          CONCATENATE g_line '3' INTO g_line SEPARATED BY space.
+          button_count = button_count +  1.
+          CALL METHOD add_to_table
+            EXPORTING
+              value        = g_line
+            CHANGING
+              t_game_lines = t_game_lines.
+        ENDIF.
+      WHEN 'FOUR'.
+        IF can_play EQ space.
+          CONCATENATE g_line '4' INTO g_line SEPARATED BY space.
+          button_count = button_count +  1.
+          CALL METHOD add_to_table
+            EXPORTING
+              value        = g_line
+            CHANGING
+              t_game_lines = t_game_lines.
+        ENDIF.
+      WHEN 'FIVE'.
+        IF can_play EQ space.
+          CONCATENATE g_line '5' INTO g_line SEPARATED BY space.
+          button_count = button_count +  1.
+          CALL METHOD add_to_table
+            EXPORTING
+              value        = g_line
+            CHANGING
+              t_game_lines = t_game_lines.
+        ENDIF.
+    ENDCASE.
+
+    IF can_play EQ space.
+      IF button_count EQ 5.
+        button_count = 0.
+        CALL METHOD validate_game
+          EXPORTING
+            line  = g_line
+            one   = g_one
+            two   = g_two
+            three = g_three
+            four  = g_four
+            five  = g_five.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.                    "pai
+
+  METHOD pbo.
+
+    SET PF-STATUS 'MAIN'.
+    SET TITLEBAR 'TITLE'.
+
+  ENDMETHOD.                    "pbo
+
+  METHOD add_to_table.
+
+    SHIFT g_line LEFT DELETING LEADING space.
+    DATA: lt_game_lines TYPE STANDARD TABLE OF tline-tdline.
+    FIELD-SYMBOLS: <fs_lt_game_lines> LIKE LINE OF lt_game_lines,
+                   <fs_t_game_lines> LIKE LINE OF me->t_game_lines.
+
+    lt_game_lines[] = t_game_lines[].
+
+    READ TABLE lt_game_lines ASSIGNING <fs_t_game_lines>
+    INDEX line_count.
+    IF sy-subrc EQ 0 AND <fs_t_game_lines> IS ASSIGNED.
+      xtext = value.
+      <fs_t_game_lines> = xtext.
+      t_game_lines[] = lt_game_lines[].
+    ELSE.
+      APPEND INITIAL LINE TO t_game_lines ASSIGNING <fs_t_game_lines>.
+      xtext = value.
+      SHIFT xtext LEFT DELETING LEADING space.
+      <fs_t_game_lines> = xtext.
+    ENDIF.
+
+    CALL METHOD text_editor->set_text_as_r3table
+      EXPORTING
+        table = t_game_lines.
+
+  ENDMETHOD.                    "add_to_table
+
+  METHOD validate_game.
+
+    DATA: l_counter TYPE i,
+          l_number TYPE string,
+          l_field TYPE string,
+          l_message TYPE string,
+          g_one_checked TYPE c,
+          g_two_checked TYPE c,
+          g_three_checked TYPE c,
+          g_four_checked TYPE c,
+          g_five_checked TYPE c.
+
+    FIELD-SYMBOLS: <fs> TYPE ANY,
+                   <fs_line> TYPE ANY.
+
+    SPLIT line AT space INTO
+    g_player_one g_player_two g_player_three
+    g_player_four g_player_five.
+
+    CONCATENATE 'LINE' line_count INTO l_field.
+    ASSIGN (l_field) TO <fs_line>.
+    CLEAR l_field.
+
+    DO 5 TIMES.
+      l_counter = l_counter + 1.
+      CASE l_counter.
+        WHEN 1.
+          l_number = 'ONE'.
+        WHEN 2.
+          l_number = 'TWO'.
+        WHEN 3.
+          l_number = 'THREE'.
+        WHEN 4.
+          l_number = 'FOUR'.
+        WHEN 5.
+          l_number = 'FIVE'.
+      ENDCASE.
+      CONCATENATE 'G_PLAYER_' l_number INTO l_field.
+      ASSIGN (l_field) TO <fs>.
+      IF <fs> EQ g_one AND g_one_checked EQ space.
+        IF l_counter EQ 1.
+          CONCATENATE l_message 'X' INTO l_message SEPARATED BY space.
+          g_one_checked = 'X'.
+        ELSE.
+          CONCATENATE l_message 'O' INTO l_message SEPARATED BY space.
+          g_one_checked = 'X'.
+        ENDIF.
+      ELSEIF <fs> EQ g_two AND g_two_checked EQ space.
+        IF l_counter EQ 2.
+          CONCATENATE l_message 'X' INTO l_message SEPARATED BY space.
+          g_two_checked = 'X'.
+        ELSE.
+          CONCATENATE l_message 'O' INTO l_message SEPARATED BY space.
+          g_two_checked = 'X'.
+        ENDIF.
+      ELSEIF <fs> EQ g_three AND g_three_checked EQ space.
+        IF l_counter EQ 3.
+          CONCATENATE l_message 'X' INTO l_message SEPARATED BY space.
+          g_three_checked = 'X'.
+        ELSE.
+          CONCATENATE l_message 'O' INTO l_message SEPARATED BY space.
+          g_three_checked = 'X'.
+        ENDIF.
+      ELSEIF <fs> EQ g_four AND g_four_checked EQ space.
+        IF l_counter EQ 4.
+          CONCATENATE l_message 'X' INTO l_message SEPARATED BY space.
+          g_four_checked = 'X'.
+        ELSE.
+          CONCATENATE l_message 'O' INTO l_message SEPARATED BY space.
+          g_four_checked = 'X'.
+        ENDIF.
+      ELSEIF <fs> EQ g_five AND g_five_checked EQ space.
+        IF l_counter EQ 5.
+          CONCATENATE l_message 'X' INTO l_message SEPARATED BY space.
+          g_five_checked = 'X'.
+        ELSE.
+          CONCATENATE l_message 'O' INTO l_message SEPARATED BY space.
+          g_five_checked = 'X'.
+        ENDIF.
+      ENDIF.
+    ENDDO.
+
+    SHIFT l_message LEFT DELETING LEADING space.
+    <fs_line> = l_message.
+    CLEAR g_line.
+    line_count = line_count + 1.
+
+    IF line_count LE 10.
+      FIND REGEX 'X X X X X' IN l_message.
+
+      IF sy-subrc EQ 0.
+        can_play = 'X'.
+        MESSAGE i000(su) WITH 'Congratulations! You won!'.
+      ENDIF.
+    ELSE.
+      can_play = 'X'.
+      MESSAGE i000(su) WITH 'Sorry. You loose'.
+    ENDIF.
+
+  ENDMETHOD.                    "validate_game
+
+ENDCLASS.                    "ZCL_ABAPMIND_UI IMPLEMENTATION

@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Report  ZABAP_SHIP                                                 *
+*&                                                                     *
+*& Developed by: Alvaro "Blag" Tejada Galindo.                         *
+*& Start day: 29.01.2010                                               *
+*& End day: 01.02.2010                                                 *
+*&---------------------------------------------------------------------*
+
+REPORT zabap_ship NO STANDARD PAGE HEADING.
+
+INCLUDE <ICON>.
+INCLUDE zabap_ship_ui.
+
+DATA: g_ui TYPE REF TO zcl_abapship_ui.
+
+SELECTION-SCREEN BEGIN OF BLOCK name.
+PARAMETERS: p_name(10) TYPE c.
+SELECTION-SCREEN END OF BLOCK name.
+
+START-OF-SELECTION.
+
+  CREATE OBJECT g_ui
+    EXPORTING
+      name = p_name.
+
+AT LINE-SELECTION.
+  CALL METHOD g_ui->dispatch.
